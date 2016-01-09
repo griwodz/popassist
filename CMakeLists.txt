@@ -42,13 +42,15 @@ cuda_find_library_local_first(CUDA_CUDADEVRT_LIBRARY cudadevrt "\"cudadevrt\" li
 set( PopAssist_CPP
 	src/assist.cu
 	src/device_prop.cu
-	src/debug_macros.cu )
+	src/debug_macros.cu
+	src/plane_2d.cu )
 
 set( PopAssist_H
 	src/assist.h
 	src/clamp.h
 	src/device_prop.h
-	src/debug_macros.h )
+	src/debug_macros.h
+	src/plane_2d.h )
 
 cuda_add_library(popassist STATIC ${PopAssist_CPP})
 
