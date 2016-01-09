@@ -76,26 +76,51 @@ void pop_info_gridsize( bool               silent,
     pop_info_gridsize(silent,grid,block,kernel,__FILE__,__LINE__)
 
 /*************************************************************
- * Group: memcpy and memset
+ * Group: memcpy
  *************************************************************/
 
-void pop_cuda_memcpy_async( void*          dst,
-                            const void*    src,
-                            size_t         sz,
-                            cudaMemcpyKind type,
-                            cudaStream_t   stream,
-                            const char*    file,
-                            size_t         line );
-void pop_cuda_memcpy_2D_async( void*          dst,
-                               size_t         dpitch,
-                               const void*    src,
-                               size_t         spitch,
-                               size_t         width,
-                               size_t         height,
-                               cudaMemcpyKind type,
-                               cudaStream_t   stream,
-                               const char*    file,
-                               size_t         line );
+namespace cuda {
+namespace toHost {
+void memcpy( void*          dst, const void* src,
+             size_t         sz,
+             const char*    file, size_t     line );
+void memcpy( void*          dst, const void* src,
+             size_t         sz,
+             cudaStream_t   stream,
+             const char*    file, size_t     line );
+void memcpy2D( void*          dst,   size_t dpitch,
+               const void*    src,   size_t spitch,
+               size_t         width, size_t height,
+               const char*    file,  size_t line );
+void memcpy2D( void*          dst,   size_t dpitch,
+               const void*    src,   size_t spitch,
+               size_t         width, size_t height,
+               cudaStream_t   stream,
+               const char*    file,  size_t line );
+} // namespace toHost
+
+namespace toDev {
+void memcpy( void*          dst, const void* src,
+             size_t         sz,
+             const char*    file,
+             size_t         line );
+void memcpy( void*          dst, const void* src,
+             size_t         sz,
+             cudaStream_t   stream,
+             const char*    file,
+             size_t         line );
+void memcpy2D( void*          dst,   size_t dpitch,
+               const void*    src,   size_t spitch,
+               size_t         width, size_t height,
+               const char*    file,  size_t line );
+void memcpy2D( void*          dst,   size_t dpitch,
+               const void*    src,   size_t spitch,
+               size_t         width, size_t height,
+               cudaStream_t   stream,
+               const char*    file,  size_t line );
+} // namespace toDev
+} // namespace cuda
+
 void pop_cuda_memcpy_to_symbol_async( const void*    symbol,
                                       const void*    src,
                                       size_t         sz,
@@ -104,6 +129,18 @@ void pop_cuda_memcpy_to_symbol_async( const void*    symbol,
                                       cudaStream_t   stream,
                                       const char*    file,
                                       size_t         line );
+void pop_cuda_memcpy_to_symbol_sync( const void*    symbol,
+                                     const void*    src,
+                                     size_t         sz,
+                                     size_t         offset,
+                                     cudaMemcpyKind type,
+                                     const char*    file,
+                                     size_t         line );
+
+/*************************************************************
+ * Group: memset
+ *************************************************************/
+
 void pop_cuda_memset_async( void*        ptr,
                             int          value,
                             size_t       bytes,
@@ -129,28 +166,6 @@ inline void pop_cuda_setx_async( T*           ptr,
                            cudaMemcpyHostToDevice, stream, file, line );
 }
 
-void pop_cuda_memcpy_sync( void*          dst,
-                           const void*    src,
-                           size_t         sz,
-                           cudaMemcpyKind type,
-                           const char*    file,
-                           size_t         line );
-void pop_cuda_memcpy_2D_sync( void*          dst,
-                              size_t         dpitch,
-                              const void*    src,
-                              size_t         spitch,
-                              size_t         width,
-                              size_t         height,
-                              cudaMemcpyKind type,
-                              const char*    file,
-                              size_t         line );
-void pop_cuda_memcpy_to_symbol_sync( const void*    symbol,
-                                     const void*    src,
-                                     size_t         sz,
-                                     size_t         offset,
-                                     cudaMemcpyKind type,
-                                     const char*    file,
-                                     size_t         line );
 void pop_cuda_memset_sync( void*        ptr,
                            int          value,
                            size_t       bytes,
@@ -158,21 +173,6 @@ void pop_cuda_memset_sync( void*        ptr,
                            size_t       line );
 
 /* async */
-#define POP_CUDA_MEMCPY_ASYNC( dst, src, sz, type, stream ) \
-    pop_cuda_memcpy_async( dst, src, sz, type, stream, __FILE__, __LINE__ )
-
-#define POP_CUDA_MEMCPY_TO_HOST_ASYNC( dst, src, sz, stream ) \
-    pop_cuda_memcpy_async( dst, src, sz, cudaMemcpyDeviceToHost, stream, __FILE__, __LINE__ )
-
-#define POP_CUDA_MEMCPY_TO_DEVICE_ASYNC( dst, src, sz, stream ) \
-    pop_cuda_memcpy_async( dst, src, sz, cudaMemcpyHostToDevice, stream, __FILE__, __LINE__ )
-
-#define POP_CUDA_MEMCPY_2D_ASYNC( dst, dpitch, src, spitch, width, height, type, stream ) \
-    pop_cuda_memcpy_2D_async( dst, dpitch, src, spitch, width, height, type, stream, __FILE__, __LINE__ )
-
-#define POP_CUDA_MEMCPY_HOST_TO_SYMBOL_ASYNC( symbol, src, sz, stream ) \
-    pop_cuda_memcpy_to_symbol_async( symbol, src, sz, 0, cudaMemcpyHostToDevice, stream, __FILE__, __LINE__ )
-
 #define POP_CUDA_MEMSET_ASYNC( ptr, val, sz, stream ) \
     pop_cuda_memset_async( ptr, val, sz, stream, __FILE__, __LINE__ )
 
@@ -183,21 +183,6 @@ void pop_cuda_memset_sync( void*        ptr,
     pop_cuda_setx_async( ptr, x, stream, __FILE__, __LINE__ )
 
 /* sync */
-#define POP_CUDA_MEMCPY_SYNC( dst, src, sz, type ) \
-    pop_cuda_memcpy_sync( dst, src, sz, type, __FILE__, __LINE__ )
-
-#define POP_CUDA_MEMCPY_TO_HOST_SYNC( dst, src, sz ) \
-    pop_cuda_memcpy_sync( dst, src, sz, cudaMemcpyDeviceToHost, __FILE__, __LINE__ )
-
-#define POP_CUDA_MEMCPY_TO_DEVICE_SYNC( dst, src, sz ) \
-    pop_cuda_memcpy_sync( dst, src, sz, cudaMemcpyHostToDevice, __FILE__, __LINE__ )
-
-#define POP_CUDA_MEMCPY_2D_SYNC( dst, dpitch, src, spitch, width, height, type ) \
-    pop_cuda_memcpy_2D_sync( dst, dpitch, src, spitch, width, height, type, __FILE__, __LINE__ )
-
-#define POP_CUDA_MEMCPY_HOST_TO_SYMBOL_SYNC( symbol, src, sz ) \
-    pop_cuda_memcpy_to_symbol_sync( symbol, src, sz, 0, cudaMemcpyHostToDevice, __FILE__, __LINE__ )
-
 #define POP_CUDA_MEMSET_SYNC( ptr, val, sz ) \
     pop_cuda_memset_sync( ptr, val, sz, __FILE__, __LINE__ )
 

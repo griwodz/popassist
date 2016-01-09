@@ -5,9 +5,7 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_CXX_FLAGS_DEBUG   "${CMAKE_CXX_FLAGS_DEBUG}   -pg")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
-SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-
-add_definitions("-DCUB_CDP")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${PROJECT_SOURCE_DIR}/CMakeModules")
 
@@ -27,10 +25,10 @@ find_package(CUDA 7.0)
 
 if(CUDA_FOUND)
   set(CUDA_SEPARABLE_COMPILATION ON)
+  add_definitions("-DCUB_CDP")
   include_directories(${CUDA_INCLUDE_DIRS})
-  add_definitions("-DWITH_CUDA")
-  set(CUDA_NVCC_FLAGS_DEBUG   "${CUDA_NVCC_FLAGS_DEBUG};-DTHIS_IS_NVCC_DEBUG_MODE;-G;-g")
-  set(CUDA_NVCC_FLAGS_RELEASE "${CUDA_NVCC_FLAGS_RELEASE};-DTHIS_IS_NVCC_RELEASE_MODE;-O3")
+  set(CUDA_NVCC_FLAGS_DEBUG   "${CUDA_NVCC_FLAGS_DEBUG};-G;-g")
+  set(CUDA_NVCC_FLAGS_RELEASE "${CUDA_NVCC_FLAGS_RELEASE};-O3")
   set(CUDA_NVCC_FLAGS         "${CUDA_NVCC_FLAGS};-gencode=arch=compute_52,code=sm_52;-gencode=arch=compute_52,code=compute_52;--default-stream;per-thread")
   # DOES NOT WORK UNTIL CUDA 7.5:
   # set(CUDA_NVCC_FLAGS         "${CUDA_NVCC_FLAGS};-Xptxas;--warn-on-local-memory-usage")
@@ -42,9 +40,9 @@ endif(CUDA_FOUND)
 cuda_find_library_local_first(CUDA_CUDADEVRT_LIBRARY cudadevrt "\"cudadevrt\" library")
 
 set( PopAssist_CPP
-	src/assist.cpp
-	src/device_prop.cpp
-	src/debug_macros.cpp )
+	src/assist.cu
+	src/device_prop.cu
+	src/debug_macros.cu )
 
 set( PopAssist_H
 	src/assist.h
@@ -52,7 +50,7 @@ set( PopAssist_H
 	src/device_prop.h
 	src/debug_macros.h )
 
-add_library(popassist STATIC ${PopAssist_CPP})
+cuda_add_library(popassist STATIC ${PopAssist_CPP})
 
 install(TARGETS popassist
         LIBRARY DESTINATION lib
